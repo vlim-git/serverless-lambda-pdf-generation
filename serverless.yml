@@ -5,12 +5,12 @@ provider:
   name: aws
   versionFunctions: false
   runtime: nodejs8.10
-  region: ap-southeast-2
+  region: us-east-1
   stage: dev
-  profile: hotpuma
-  apiGateway:
-   binaryMediaTypes: # Optional binary media types the API might return
-     - 'application/pdf'
+  profile: default
+  # apiGateway:
+  #  binaryMediaTypes: # Optional binary media types the API might return
+  #    - 'application/pdf'
 
   package:
     individually: true
@@ -18,7 +18,7 @@ provider:
 plugins:
   - serverless-webpack
   - serverless-offline
-  - serverless-domain-manager
+  # - serverless-domain-manager
   - serverless-apigw-binary
 
 custom:
@@ -31,11 +31,16 @@ custom:
   serverless-offline:
     location: .webpack/service
 
-  customDomain:
-    domainName: labs.mianio.com
-    basePath: api
-    stage: ${self:provider.stage}
-    createRoute53Record: true
+  apigwBinary:
+    types:           #list of mime-types
+      - 'image/jpeg'
+      - 'text/html'
+      - 'application/pdf'
+  # customDomain:
+  #   domainName: labs.mianio.com
+  #   basePath: api
+  #   stage: ${self:provider.stage}
+  #   createRoute53Record: true
 
 functions:
   give-me-the-pdf:

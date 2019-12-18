@@ -6,12 +6,12 @@
     },
     "provider": {
       "stage": "dev",
-      "region": "ap-southeast-2",
-      "variableSyntax": "\\${([ ~:a-zA-Z0-9._@'\",\\-\\/\\(\\)]+?)}",
+      "variableSyntax": "\\${([ ~:a-zA-Z0-9._@'\",\\-\\/\\(\\)*?]+?)}",
       "name": "aws",
       "versionFunctions": false,
       "runtime": "nodejs8.10",
-      "profile": "hotpuma",
+      "region": "us-east-1",
+      "profile": "default",
       "package": {
         "individually": true
       },
@@ -23,8 +23,54 @@
           "ServerlessDeploymentBucket": {
             "Type": "AWS::S3::Bucket",
             "Properties": {
-              "AccelerateConfiguration": {
-                "AccelerationStatus": "Enabled"
+              "BucketEncryption": {
+                "ServerSideEncryptionConfiguration": [
+                  {
+                    "ServerSideEncryptionByDefault": {
+                      "SSEAlgorithm": "AES256"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "ServerlessDeploymentBucketPolicy": {
+            "Type": "AWS::S3::BucketPolicy",
+            "Properties": {
+              "Bucket": {
+                "Ref": "ServerlessDeploymentBucket"
+              },
+              "PolicyDocument": {
+                "Statement": [
+                  {
+                    "Action": "s3:*",
+                    "Effect": "Deny",
+                    "Principal": "*",
+                    "Resource": [
+                      {
+                        "Fn::Join": [
+                          "",
+                          [
+                            "arn:",
+                            {
+                              "Ref": "AWS::Partition"
+                            },
+                            ":s3:::",
+                            {
+                              "Ref": "ServerlessDeploymentBucket"
+                            },
+                            "/*"
+                          ]
+                        ]
+                      }
+                    ],
+                    "Condition": {
+                      "Bool": {
+                        "aws:SecureTransport": false
+                      }
+                    }
+                  }
+                ]
               }
             }
           },
@@ -75,7 +121,7 @@
                         ],
                         "Resource": [
                           {
-                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/serverless-pdf-demo-dev-give-me-the-pdf:*"
+                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/serverless-pdf-demo-dev*:*"
                           }
                         ]
                       },
@@ -86,7 +132,7 @@
                         ],
                         "Resource": [
                           {
-                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/serverless-pdf-demo-dev-give-me-the-pdf:*:*"
+                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/serverless-pdf-demo-dev*:*:*"
                           }
                         ]
                       }
@@ -101,7 +147,9 @@
                   [
                     "serverless-pdf-demo",
                     "dev",
-                    "ap-southeast-2",
+                    {
+                      "Ref": "AWS::Region"
+                    },
                     "lambdaRole"
                   ]
                 ]
@@ -115,7 +163,7 @@
                 "S3Bucket": {
                   "Ref": "ServerlessDeploymentBucket"
                 },
-                "S3Key": "serverless/serverless-pdf-demo/dev/1552024649681-2019-03-08T05:57:29.681Z/serverless-pdf-demo.zip"
+                "S3Key": "serverless/serverless-pdf-demo/dev/1576689913499-2019-12-18T17:25:13.499Z/serverless-pdf-demo.zip"
               },
               "FunctionName": "serverless-pdf-demo-dev-give-me-the-pdf",
               "Handler": "functions/pdf.generate",
@@ -171,8 +219,7 @@
                   "ResponseParameters": {
                     "method.response.header.Access-Control-Allow-Origin": true,
                     "method.response.header.Access-Control-Allow-Headers": true,
-                    "method.response.header.Access-Control-Allow-Methods": true,
-                    "method.response.header.Access-Control-Allow-Credentials": true
+                    "method.response.header.Access-Control-Allow-Methods": true
                   },
                   "ResponseModels": {}
                 }
@@ -190,11 +237,10 @@
                     "ResponseParameters": {
                       "method.response.header.Access-Control-Allow-Origin": "'*'",
                       "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
-                      "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET'",
-                      "method.response.header.Access-Control-Allow-Credentials": "'false'"
+                      "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET'"
                     },
                     "ResponseTemplates": {
-                      "application/json": "#set($origin = $input.params(\"Origin\"))\n#if($origin == \"\") #set($origin = $input.params(\"origin\")) #end\n#if($origin == \"*\") #set($context.responseOverride.header.Access-Control-Allow-Origin = $origin) #end"
+                      "application/json": "#set($origin = $input.params(\"Origin\"))\n#if($origin == \"\") #set($origin = $input.params(\"origin\")) #end\n#if($origin.matches(\".*\")) #set($context.responseOverride.header.Access-Control-Allow-Origin = $origin) #end"
                     }
                   }
                 ]
@@ -250,7 +296,7 @@
               "MethodResponses": []
             }
           },
-          "ApiGatewayDeployment1552024649800": {
+          "ApiGatewayDeployment1576689904820": {
             "Type": "AWS::ApiGateway::Deployment",
             "Properties": {
               "RestApiId": {
@@ -273,17 +319,7 @@
                 ]
               },
               "Action": "lambda:InvokeFunction",
-              "Principal": {
-                "Fn::Join": [
-                  "",
-                  [
-                    "apigateway.",
-                    {
-                      "Ref": "AWS::URLSuffix"
-                    }
-                  ]
-                ]
-              },
+              "Principal": "apigateway.amazonaws.com",
               "SourceArn": {
                 "Fn::Join": [
                   "",
@@ -317,9 +353,6 @@
               "Ref": "ServerlessDeploymentBucket"
             }
           },
-          "ServerlessDeploymentBucketAccelerated": {
-            "Value": true
-          },
           "ServiceEndpoint": {
             "Description": "URL of the service endpoint",
             "Value": {
@@ -330,7 +363,11 @@
                   {
                     "Ref": "ApiGatewayRestApi"
                   },
-                  ".execute-api.ap-southeast-2.",
+                  ".execute-api.",
+                  {
+                    "Ref": "AWS::Region"
+                  },
+                  ".",
                   {
                     "Ref": "AWS::URLSuffix"
                   },
@@ -348,8 +385,54 @@
           "ServerlessDeploymentBucket": {
             "Type": "AWS::S3::Bucket",
             "Properties": {
-              "AccelerateConfiguration": {
-                "AccelerationStatus": "Enabled"
+              "BucketEncryption": {
+                "ServerSideEncryptionConfiguration": [
+                  {
+                    "ServerSideEncryptionByDefault": {
+                      "SSEAlgorithm": "AES256"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "ServerlessDeploymentBucketPolicy": {
+            "Type": "AWS::S3::BucketPolicy",
+            "Properties": {
+              "Bucket": {
+                "Ref": "ServerlessDeploymentBucket"
+              },
+              "PolicyDocument": {
+                "Statement": [
+                  {
+                    "Action": "s3:*",
+                    "Effect": "Deny",
+                    "Principal": "*",
+                    "Resource": [
+                      {
+                        "Fn::Join": [
+                          "",
+                          [
+                            "arn:",
+                            {
+                              "Ref": "AWS::Partition"
+                            },
+                            ":s3:::",
+                            {
+                              "Ref": "ServerlessDeploymentBucket"
+                            },
+                            "/*"
+                          ]
+                        ]
+                      }
+                    ],
+                    "Condition": {
+                      "Bool": {
+                        "aws:SecureTransport": false
+                      }
+                    }
+                  }
+                ]
               }
             }
           }
@@ -359,20 +442,12 @@
             "Value": {
               "Ref": "ServerlessDeploymentBucket"
             }
-          },
-          "ServerlessDeploymentBucketAccelerated": {
-            "Value": true
           }
         }
       },
       "vpc": {}
     },
     "custom": {
-      "apigwBinary": {
-        "types": [
-          "application/pdf"
-        ]
-      },
       "webpack": {
         "webpackConfig": "webpack.config.js",
         "includeModules": true,
@@ -381,17 +456,17 @@
       "serverless-offline": {
         "location": ".webpack/service"
       },
-      "customDomain": {
-        "domainName": "labs.mianio.com",
-        "basePath": "api",
-        "stage": "dev",
-        "createRoute53Record": true
+      "apigwBinary": {
+        "types": [
+          "image/jpeg",
+          "text/html",
+          "application/pdf"
+        ]
       }
     },
     "plugins": [
       "serverless-webpack",
       "serverless-offline",
-      "serverless-domain-manager",
       "serverless-apigw-binary"
     ],
     "pluginsData": {},
@@ -441,10 +516,11 @@
         "vpc": {}
       }
     },
+    "serviceFilename": "serverless.yml",
     "layers": {}
   },
   "package": {
-    "artifactDirectoryName": "serverless/serverless-pdf-demo/dev/1552024649681-2019-03-08T05:57:29.681Z",
+    "artifactDirectoryName": "serverless/serverless-pdf-demo/dev/1576689913499-2019-12-18T17:25:13.499Z",
     "artifact": ""
   }
 }

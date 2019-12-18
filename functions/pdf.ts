@@ -7,20 +7,20 @@ import {
   httpErrorHandler
 } from "middy/middlewares";
 
-let fs = require("fs");
-let path = require("path");
+// let fs = require("fs");
+// let path = require("path");
 
 
 
-let data = "";
+// let data = "";
 
-console.log("#### Test", path.resolve("./hello.html"));
+// console.log("#### Test", path.resolve("./hello.html"));
 
-fs.readFile(__dirname +'/../hello.html', function (err, data) {
-    if (err) throw err;
-    data = data;
-});
-console.log("#### Test", data);
+// fs.readFile(__dirname +'/../hello.html', function (err, data) {
+//     if (err) throw err;
+//     data = data;
+// });
+// console.log("#### Test", data);
 process.env["PATH"] =
   process.env["PATH"] + ":" + process.env["LAMBDA_TASK_ROOT"];
 
@@ -31,9 +31,8 @@ const getPDFStream = async (): Promise<any> => {
         <meta charset="utf-8">
         <title>PDF Result Template</title>
         <style>
-            body sty {
+            body{
                 font-family: unset !important;
-                background: red;
             }
             /* .container {
                 max-width: 1250px;
@@ -69,19 +68,19 @@ const getPDFStream = async (): Promise<any> => {
     <body>
         <div class="container">
             <div class="row header"  style="max-width: 1250px">
-                <div class="col-6" style="-webkit-box-flex: 0; width: 50%; float: left; background: red;">
+                <div class="col-6" style="-webkit-box-flex: 0; width: 50%; float: left;">
                     <div class="text_logo">
-                        <p><b> Prescription SheetImpression </b></p>
+                        <p style="font-size: 30px;"><b> Prescription SheetImpression </b></p>
                     </div>
                 </div>
-                <div class="col-3" style="-webkit-box-flex: 0; width: 25%; float: left; background: yellow;">
+                <div class="col-3" style="-webkit-box-flex: 0; width: 25%; float: left;">
                     <div class="pic_logo">
                         <img src="./img/logo.png" alt="logo"/>
                     </div>
                 </div>
-                <div class="col-3 text-right" style="-webkit-box-flex: 0; width: 25%; float: left; background: blue;">
+                <div class="col-3 text-right" style="-webkit-box-flex: 0; width: 25%; float: left;">
                     <div class="number_page">
-                        <p><b> Page 1/1 </b></p>
+                        <p style="font-size: 30px;"><b> Page 1/1 </b></p>
                     </div>
                 </div>
             </div>
