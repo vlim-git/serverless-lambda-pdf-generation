@@ -1,5 +1,5 @@
 service: serverless-pdf-demo
-frameworkVersion: "1.37.0"
+frameworkVersion: "1.59.1"
 
 provider:
   name: aws
